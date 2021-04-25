@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPACE SHOOTER</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <canvas id="target"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("target");
+        const context = canvas.getContext("2d");
+
+        canvas.width = 672;
+        canvas.height = 744;
+
+        //time loop every 30second
+        const FSP = 30;
+        const lives = 3;
+        setInterval(updateScreen, 1000 / FSP);
+
+        class Ball {
+            constructor(x, y, speedX, speedY, radius, color) {
+                this.x = x;
+                this.y = y;
+                this.speedY = speedY;
+                this.speedX = speedX;
+                this.radius = radius;
+                this.color = color;
+                this.speed = 0.4;
+                this.angle = Math.floor(Math.random() * 350);
+            }
+
+            update() {
+                this.x += Math.cos(this.angle / 180 * Math.PI) * this.speed / FSP;
+                this.y += Math.sin(this.angle / 180 * Math.PI) * this.speed / FSP;
+                if (this.x < this.radius) {
+                    this.x = canvas.width;
+                }
+                if (this.x > canvas.width) {
+                    this.x = this.radius;
+                }
+                if (this.y < this.radius) {
+                    this.x = canvas.height;
+                }
+                if (this.y > canvas.height) {
+                    this.y = this.radius;
+                }
+            }
+
+            draw() {
+                context.beginPath();
+                context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+                context.fillStyle = this.color;
+                context.fill();
+            }
+        }
+
+        const rotationSpeed = 360; // turning speed in degrees per second
+        class Player {
+            constructor(x, y, movementSpeedX, movementSpeedY, color) {
+                this.x = canvas.width / 2;
+                this.y = canvas.height / 2;
+                this.movementSpeedX = movementSpeedX;
+                this.movementSpeedY = movementSpeedY;
+                this.color = color;
+                this.radius = 20; // size of the ship
+                this.angle = 90 / 180 * Math.PI; // starting at 90 degrees into radiant
+                this.rotate = 0;
+            }
+            moveUp() {                                  // when key up arrow is pressed,
+                this.y = this.y - this.movementSpeedY;   // then decrease y coordinate by the amount of movementSpeedY value
+            }
+            moveDown() {
+                this.y = this.y + this.movementSpeedY;
+            }
+            rotateLeft() {
+                if (this.rotate = rotationSpeed / 180 * Math.PI / FSP) {
+                    this.x = this.x - this.movementSpeedX;
+                }
+            }
+            rotateRight() {
+                if (this.rotate = - rotationSpeed / 180 * Math.PI / FSP) {
+                    this.x = this.x + this.movementSpeedX;
+                }
+            }
+            stopRotate() {
+                this.rotate = 0;
+            }
+            update() {
+                this.angle += this.rotate;
+                if (this.x < 0 - this.radius) {
+                    this.x = canvas.width + this.radius;
+                } else if (this.x > canvas.width + this.radius) {
+                    this.x = - this.radius;
+                }
+                if (this.y < 0 - this.radius) {
+                    this.y = canvas.height + this.radius;
+                } else if (this.y > canvas.height + this.radius) {
+                    this.y = - this.radius;
+                }
+            }
+            draw() {
+                context.beginPath();
+                // tip of the ship
+                context.moveTo(this.x + this.radius * Math.cos(this.angle),
+                    this.y - this.radius * Math.sin(this.angle)); // minus meaning upwards
+                // left side
+                context.lineTo(this.x - this.radius * (Math.cos(this.angle) + Math.sin(this.angle)),
+                    this.y + this.radius * (Math.sin(this.angle) - Math.cos(this.angle)));
+                // right side
+                context.lineTo(this.x - this.radius * (Math.cos(this.angle) - Math.sin(this.angle)),
+                    this.y + this.radius * (Math.sin(this.angle) + Math.cos(this.angle)));
+                context.fillStyle = this.color;
+                context.fill();
+            }
+        }
+
+        window.addEventListener('keydown', function (event) { // the key is pressing down
+            switch (event.keyCode) {
+                case 37:
+                    console.log('LEFT!');
+                    player.rotateLeft();
+                    break;
+                case 38:
+                    console.log('UP!');
+                    player.moveUp();
+                    break;
+                case 39:
+                    console.log('RIGHT!');
+                    player.rotateRight();
+                    break;
+                case 40:
+                    console.log('DOWN!');
+                    player.moveDown();
+                    break;
+            }
+        });
+
+        window.addEventListener('keyup', function (event) { // release the key
+            switch (event.keyCode) {
+                case 37:
+                    console.log('STOPLEFT!');
+                    player.stopRotate();
+                    break;
+                case 38:
+                    console.log('UP!');
+                    player.moveUp();
+                    break;
+                case 39:
+                    console.log('STOPRIGHT!');
+                    player.stopRotate();
+                    break;
+                case 40:
+                    console.log('DOWN!');
+                    player.moveDown();
+                    break;
+            }
+        });
+
+        const bigAsteroid = [];
+        const smallAsteroid = [];
+        const player = new Player(0, 0, 48, 48, "grey")
+
+        for (let i = 0; i < 5; i++) {
+            bigAsteroid.push(
+                new Ball(Math.random() * canvas.width, // x coord
+                         Math.random() * canvas.height, // y coord
+                        (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // x speed
+                        (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // y speed
+                         50, "red")
+            );
+        }
+
+        for (let i = 0; i < 7; i++) {
+            smallAsteroid.push(
+                new Ball(Math.random() * canvas.width, // x coord
+                         Math.random() * canvas.height, // y coord
+                        (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // x speed
+                        (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // y speed
+                         20, "green")
+            );
+        }
+
+        function inBetweenDistance(x1, y1, x2, y2) {
+            let xDelta = x2 - x1;
+            let yDelta = y2 - y1;
+
+            return Math.sqrt(xDelta * xDelta + yDelta * yDelta);
+        }
+
+        function drawLives() {
+            context.font = "20px Bold Arial";
+            context.fillStyle = "black";
+            context.fillText("Lives: " + lives, 8, 20);
+            if (lives == 0) {
+                alert("YOU LOSE, RELOAD TO RESTART !!!");
+                document.location.reload();
+                clearInterval(interval);
+            }
+        }
+
+        function updateScreen() {
+            console.log('update called');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < bigAsteroid.length; i++) {
+                bigAsteroid[i].update();
+                bigAsteroid[i].draw();
+                if (inBetweenDistance(bigAsteroid.x, bigAsteroid.y, player.x, player.y) < bigAsteroid.radius + player.radius) {
+                    //lives -= 1;
+                    console.log('Hit');
+                }
+            }
+            for (let i = 0; i < smallAsteroid.length; i++) {
+                smallAsteroid[i].update();
+                smallAsteroid[i].draw();
+            }
+
+            player.update();
+            player.draw();
+            drawLives();
+
+            window.requestAnimationFrame(updateScreen);
+        }
+        updateScreen();
+        
+    </script>
+</body>
+
+</html>
