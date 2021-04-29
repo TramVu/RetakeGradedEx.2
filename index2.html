@@ -65,15 +65,18 @@
 
         const rotationSpeed = 360; // turning speed in degrees per second
         class Player {
-            constructor(x, y, movementSpeedX, movementSpeedY, color) {
-                this.x = canvas.width / 2;
-                this.y = canvas.height / 2;
+            constructor(x, y, movementSpeedX, movementSpeedY, color, angle, rotate, radius, lives) {
+                this.x = x;
+                this.y = y;
                 this.movementSpeedX = movementSpeedX;
                 this.movementSpeedY = movementSpeedY;
                 this.color = color;
-                this.radius = 20; // size of the ship
-                this.angle = 90 / 180 * Math.PI; // starting at 90 degrees into radiant
-                this.rotate = 0;
+                this.radius = radius; // size of the ship
+                this.angle = angle // starting at 90 degrees into radiant
+                this.rotate = rotate;
+                this.xCentroid = 0;
+                this.yCentroid = 0;
+                this.lives = lives;
             }
             moveUp() {                                  // when key up arrow is pressed,
                 this.y = this.y - this.movementSpeedY;   // then decrease y coordinate by the amount of movementSpeedY value
@@ -95,6 +98,34 @@
                 this.rotate = 0;
             }
             update() {
+                drawLives(this.lives);
+                this.xCentroid = ((this.x + this.radius * Math.cos(this.angle)) + this.x - this.radius * (Math.cos(this.angle) + Math.sin(this.angle)) + this.x - this.radius * (Math.cos(this.angle) - Math.sin(this.angle))) / 3;
+                this.yCentroid = ((this.y - this.radius * Math.sin(this.angle) + this.y + this.radius * (Math.sin(this.angle) - Math.cos(this.angle)) + this.y + this.radius * (Math.sin(this.angle) + Math.cos(this.angle))) / 3);
+
+                for (let i = 0; i < bigAsteroid.length; i++) {
+                    const xDistance = this.xCentroid - bigAsteroid[i].x;
+                    const yDistance = this.yCentroid - bigAsteroid[i].y;
+                    const distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+
+                    if (distance < player.radius + bigAsteroid[i].radius - 30) {
+                        this.lives = this.lives - 1;
+                        this.x = canvas.width/2;
+                        this.y = canvas.height/2;
+                    }
+                }
+
+                for (let i = 0 ; i < smallAsteroid.length; i++) {
+                    const xDistance = this.xCentroid - smallAsteroid[i].x ;
+                    const yDistance = this.yCentroid - smallAsteroid[i].y ;
+                    const distance = Math.sqrt(Math.pow(xDistance,2)+ Math.pow(yDistance,2));
+                    
+                    if (distance  < player.radius + smallAsteroid[i].radius - 30){
+                        this.lives = this.lives - 1;
+                        this.x = canvas.width/2;
+                        this.y = canvas.height/2;
+                    }
+                }
+
                 this.angle += this.rotate;
                 if (this.x < 0 - this.radius) {
                     this.x = canvas.width + this.radius;
@@ -107,6 +138,7 @@
                     this.y = - this.radius;
                 }
             }
+
             draw() {
                 context.beginPath();
                 // tip of the ship
@@ -126,19 +158,15 @@
         window.addEventListener('keydown', function (event) { // the key is pressing down
             switch (event.keyCode) {
                 case 37:
-                    console.log('LEFT!');
                     player.rotateLeft();
                     break;
                 case 38:
-                    console.log('UP!');
                     player.moveUp();
                     break;
                 case 39:
-                    console.log('RIGHT!');
                     player.rotateRight();
                     break;
                 case 40:
-                    console.log('DOWN!');
                     player.moveDown();
                     break;
             }
@@ -147,19 +175,15 @@
         window.addEventListener('keyup', function (event) { // release the key
             switch (event.keyCode) {
                 case 37:
-                    console.log('STOPLEFT!');
                     player.stopRotate();
                     break;
                 case 38:
-                    console.log('UP!');
                     player.moveUp();
                     break;
                 case 39:
-                    console.log('STOPRIGHT!');
                     player.stopRotate();
                     break;
                 case 40:
-                    console.log('DOWN!');
                     player.moveDown();
                     break;
             }
@@ -167,39 +191,32 @@
 
         const bigAsteroid = [];
         const smallAsteroid = [];
-        const player = new Player(0, 0, 48, 48, "grey")
+        const player = new Player(canvas.width / 2, canvas.height / 2, 48, 48, "grey", 90 / 180 * Math.PI, 0, 20, lives);
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 4; i++) {
             bigAsteroid.push(
                 new Ball(Math.random() * canvas.width, // x coord
-                         Math.random() * canvas.height, // y coord
-                        (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // x speed
-                        (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // y speed
-                         50, "red")
+                    Math.random() * canvas.height, // y coord
+                    (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // x speed
+                    (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // y speed
+                    50, "red")
             );
         }
 
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 5; i++) {
             smallAsteroid.push(
                 new Ball(Math.random() * canvas.width, // x coord
-                         Math.random() * canvas.height, // y coord
-                        (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // x speed
-                        (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // y speed
-                         20, "green")
+                    Math.random() * canvas.height, // y coord
+                    (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // x speed
+                    (Math.random() * 10) / FSP * (Math.random() > 0.5 ? 1 : -1), // y speed
+                    20, "green")
             );
         }
 
-        function inBetweenDistance(x1, y1, x2, y2) {
-            let xDelta = x2 - x1;
-            let yDelta = y2 - y1;
-
-            return Math.sqrt(xDelta * xDelta + yDelta * yDelta);
-        }
-
-        function drawLives() {
+        function drawLives(lives) {
             context.font = "20px Bold Arial";
             context.fillStyle = "black";
-            context.fillText("Lives: " + lives, 8, 20);
+            context.fillText("Lives: " + lives, 8, 50);
             if (lives == 0) {
                 alert("YOU LOSE, RELOAD TO RESTART !!!");
                 document.location.reload();
@@ -208,17 +225,14 @@
         }
 
         function updateScreen() {
-            console.log('update called');
+
             context.clearRect(0, 0, canvas.width, canvas.height);
 
             for (let i = 0; i < bigAsteroid.length; i++) {
                 bigAsteroid[i].update();
                 bigAsteroid[i].draw();
-                if (inBetweenDistance(bigAsteroid.x, bigAsteroid.y, player.x, player.y) < bigAsteroid.radius + player.radius) {
-                    //lives -= 1;
-                    console.log('Hit');
-                }
             }
+
             for (let i = 0; i < smallAsteroid.length; i++) {
                 smallAsteroid[i].update();
                 smallAsteroid[i].draw();
@@ -226,12 +240,10 @@
 
             player.update();
             player.draw();
-            drawLives();
-
             window.requestAnimationFrame(updateScreen);
         }
         updateScreen();
-        
+
     </script>
 </body>
 
